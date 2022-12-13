@@ -5,60 +5,46 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.Nullable;
 
-public class DatabaseHelper extends SQLiteOpenHelper {
-    private static final String DATABASE_NAME = "200524M";
+public class Database extends SQLiteOpenHelper {
+    private static final String DATABASE_NAME = "200524M";  //name of the Database
     private static final int DATABASE_VERSION = 1;
-    //    create tables
+
+    public static Database instance;
+
+    // Tables of the database
     public static final String TABLE_ACCOUNTS = "accounts";
     public static final String TABLE_TRANSACTIONS = "transactions";
-//    public static final String TABLE_EXPENSE_TYPES = "expenseTypes";
 
-    //    create keys
-    public static final String KEY_ACCOUNT_NO = "accountNo";
-    public static final String KEY_BANK_NAME = "bankName";
-    public static final String KEY_ACCOUNT_HOLDER_NAME = "accountHolderName";
-    public static final String KEY_BALANCE = "balance";
-    private static final String KEY_TRANSACTION_ID = "id";
-    public static final String KEY_EXPENSE_TYPE = "expenseType";
-    public static final String KEY_AMOUNT = "amount";
-    public static final String KEY_DATE = "date";
+    // Account table
+    private static final String ACCOUNT_TABLE_CREATE = "CREATE TABLE " + TABLE_ACCOUNTS + "(" + "accountNo" + " TEXT PRIMARY KEY," + "bankName" + " TEXT," + "accountHolderName" + " TEXT," + "balance" + " REAL" + ")";
 
-    public static DatabaseHelper instance;
+    // Transaction table
+    private static final String TRANSACTIONS_TABLE_CREATE = "CREATE TABLE " + TABLE_TRANSACTIONS + "(" + "transactionId" + " INTEGER PRIMARY KEY AUTOINCREMENT," + "date" + " TEXT," + "accountNo" + " TEXT," + "expenseType" + " TEXT," + "amount" + " REAL," + "FOREIGN KEY(" + "accountNo" + ") REFERENCES "+ TABLE_ACCOUNTS +"(" + "accountNo" + ") )";
 
-    public static DatabaseHelper getInstance(Context context) {
+    public Database(@Nullable Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    // Create tables
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        sqLiteDatabase.execSQL(ACCOUNT_TABLE_CREATE);
+        sqLiteDatabase.execSQL(TRANSACTIONS_TABLE_CREATE);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+        // discard the table if exist
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS '" + TABLE_ACCOUNTS + "'");
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS '" + TABLE_TRANSACTIONS + "'");
+        onCreate(sqLiteDatabase);
+    }
+
+    public static Database getInstance(Context context) {
         if (instance == null) {
-            instance = new DatabaseHelper(context);
+            instance = new Database(context);
         }
         return instance;
     };
 
-    private static final String CREATE_ACCOUNTS_TABLE = "CREATE TABLE " + TABLE_ACCOUNTS + "("
-            + KEY_ACCOUNT_NO + " TEXT PRIMARY KEY," + KEY_BANK_NAME + " TEXT,"
-            + KEY_ACCOUNT_HOLDER_NAME + " TEXT," + KEY_BALANCE + " REAL" + ")";
-
-    private static final String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE " + TABLE_TRANSACTIONS + "("
-            + KEY_TRANSACTION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + KEY_DATE + " TEXT," + KEY_ACCOUNT_NO + " TEXT,"
-            + KEY_EXPENSE_TYPE + " TEXT," + KEY_AMOUNT + " REAL," + "FOREIGN KEY(" + KEY_ACCOUNT_NO +
-            ") REFERENCES "+ TABLE_ACCOUNTS +"(" + KEY_ACCOUNT_NO + ") )";
-
-    public DatabaseHelper(@Nullable Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
-    }
-
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        db.execSQL(CREATE_ACCOUNTS_TABLE);
-        db.execSQL(CREATE_TRANSACTIONS_TABLE);
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-        // Drop older table if existed
-        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_ACCOUNTS + "'");
-        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_TRANSACTIONS + "'");
-
-        // Create tables again
-        onCreate(db);
-    }
 }
